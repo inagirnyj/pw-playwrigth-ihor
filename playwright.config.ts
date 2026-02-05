@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+
 import { TestOptions } from './test-options';
 
 require('dotenv').config();
@@ -13,8 +14,19 @@ export default defineConfig<TestOptions>({
   reporter: [
     ['html'],
     // ['allure-playwright']
-  ],
+    process.env.CI ? ["dot"] : ["list"],
+    // Add Argos reporter.
+    [
+      "@argos-ci/playwright/reporter",
+      {
+        // Upload to Argos on CI only.
+        uploadToArgos: !!process.env.CI,
 
+        // Set your Argos token (required if not using GitHub Actions).
+        token: `${process.env.ARGOS_TOKEN}`,
+      },
+    ],
+  ],
   use: {
     globalsQaUrl: 'https://www.globalsqa.com/demo-site/draganddrop/',
     baseURL: process.env.DEV === '1' ? 'http://localhost:4201/'
@@ -22,6 +34,7 @@ export default defineConfig<TestOptions>({
         : 'http://localhost:4200/',
 
     trace: 'on-first-retry',
+    screenshot: "only-on-failure",
     actionTimeout: 20000,
     navigationTimeout: 25000,
     video: {
